@@ -31,3 +31,23 @@ SSH_KEY_PASSWORD= # Пароль от вашего SSH ключа (если за
 
     ./mod -show-changed-modules=true #Запустить отдельную команду, чтобы посмотреть список модулей в которых локальные изменения в гите
 ```
+
+## Примеры референсов на модули в конфиге
+
+1. Просто Ssh ссылка на модуль 
+2. Просто Https ссылка на модуль
+3. Ветки (если в модуле что-то изменяется, то без обновления тэга при инсталле все новые обновления подтянулся)
+4. Тэги (исопльзуется регулярка `\d(\..*)+` для опредления что это тэг)
+5. Хэш коммита
+
+```json
+ "devDependencies": {
+    "test": "git@github.com:SergeyDarn/test-module-js.git",
+    "storefront-query-builder": "https://github.com/DivanteLtd/storefront-query-builder.git",
+ },
+ "dependencies": {
+    "scrape-search-ai": "https://github.com/SergeyDarn/scrape-search-ai#dev",
+    "magnific-popup": "git@github.com:SergeyDarn/Magnific-Popup.git#1.8.0",
+    "Course_Bash": "git@github.com:SergeyDarn/Course_Bash-Programming.git#3a7a19020151b45a29896c9142723efe5b11a061",
+ }
+```
