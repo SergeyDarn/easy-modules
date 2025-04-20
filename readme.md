@@ -42,7 +42,7 @@ SSH_KEY_PASSWORD= # Пароль от вашего SSH ключа (если за
 4. Тэги (используется регулярка `\d(\..*)+` для определения что это тэг)
 5. Хэш коммита
 
-```json package.json
+```json
 {
    "devDependencies": {
       "test": "git@github.com:SergeyDarn/test-module-js.git",
@@ -51,7 +51,7 @@ SSH_KEY_PASSWORD= # Пароль от вашего SSH ключа (если за
    "dependencies": {
       "scrape-search-ai": "https://github.com/SergeyDarn/scrape-search-ai#dev",
       "magnific-popup": "git@github.com:SergeyDarn/Magnific-Popup.git#1.8.0",
-      "Course_Bash": "git@github.com:SergeyDarn/Course_Bash-Programming.   git#3a7a19020151b45a29896c9142723efe5b11a061",
+      "Course_Bash": "git@github.com:SergeyDarn/Course_Bash-Programming.git#3a7a19020151b45a29896c9142723efe5b11a061",
    }
 }
 ```
