@@ -16,8 +16,8 @@ var GIT_DEFAULT_BRANCHES = []plumbing.ReferenceName{
 	plumbing.NewBranchReferenceName("master"),
 }
 
-var GIT_URL_SEPARATOR = "#"
-var GIT_NORMAL_URL = "http"
+const GIT_URL_SEPARATOR = "#"
+const GIT_NORMAL_URL = "http"
 
 func GitClone(
 	repoName string,
