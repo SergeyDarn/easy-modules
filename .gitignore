@@ -5,7 +5,7 @@ node_modules/
 go.env.local
 
 test-module-js
-src/*
+src/
 yarn.lock
 package.json
 .yarnrc.yml
