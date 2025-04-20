@@ -13,7 +13,7 @@
 3. Cоздать в корне проекта файл локального конфига `go.env.local` и не забыть добавить его в `.gitignore`
 4. Задать настройки в файлах `go.env` и `go.env.local`
 ```.env
-CONFIG_FILE=package.json
+CONFIG_FILE="package.json"
 MODULES_DIR="src/modules"
 SSH_KEY_PATH="/Users/user/.ssh/id_rsa"
 SSH_KEY_PASSWORD=""
