@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -16,8 +17,19 @@ var GIT_DEFAULT_BRANCHES = []plumbing.ReferenceName{
 	plumbing.NewBranchReferenceName("master"),
 }
 
-const GIT_URL_SEPARATOR = "#"
-const GIT_NORMAL_URL = "http"
+const (
+	GIT_URL_SEPARATOR = string('#')
+	GIT_NORMAL_URL    = "http"
+	TAG_REGEXP        = `\d(\..*)+`
+)
+
+const (
+	REPO_COLOR   = lipgloss.Color("#f98b6c")
+	URL_COLOR    = lipgloss.Color("#4a26fd")
+	TAG_COLOR    = lipgloss.Color("#ef4fa6")
+	HASH_COLOR   = lipgloss.Color("#1E88E5")
+	BRANCH_COLOR = lipgloss.Color("#ff9e22")
+)
 
 func GitClone(
 	repoName string,
@@ -26,7 +38,9 @@ func GitClone(
 	sshKeyPath string,
 	sshKeyPassword string,
 ) {
-	log.Debug("Cloning", "repo", repoName, "url", repoUrl)
+	repoOutput := prepareGitColorOutput("repo="+repoName, REPO_COLOR) + " "
+	urlOutput := prepareGitColorOutput("url="+repoUrl, URL_COLOR)
+	log.Debug("Cloning " + repoOutput + urlOutput)
 
 	cleanModuleUrl, reference, commitHash, _, _ := parseGitUrl(repoUrl)
 	options := &git.CloneOptions{
@@ -40,7 +54,7 @@ func GitClone(
 	}
 
 	repo, err := git.PlainClone(repoDirPath, false, options)
-	CheckError(err, "Error while clonning repo "+repoName)
+	CheckError(err, "Error while clonning "+repoOutput)
 
 	if commitHash != "" {
 		GitCheckout(repo, commitHash, "")
@@ -48,8 +62,10 @@ func GitClone(
 
 	ref, err := repo.Head()
 	CheckError(err, "Error while getting repo head")
+	headOutput := prepareGitColorOutput("head="+ref.String(), HASH_COLOR)
 
-	log.Debug("Cloning successful.", "repo", repoName, "head", ref.String())
+	successOuput := PrepareColorOutput("Cloning successful ", SUCCESS_COLOR)
+	log.Debug(successOuput + repoOutput + headOutput)
 }
 
 func GitDirStatus(dirPath string) git.Status {
@@ -86,9 +102,11 @@ func GitCheckout(
 		Hash:   hashObject,
 		Branch: processedReference,
 	})
-	CheckError(err, "Error while trying to checkout commitHash="+commitHash+" branchOrTag="+processedReference.String())
+	commitOutput := prepareGitColorOutput("commitHash="+commitHash, HASH_COLOR) + " "
+	branchOrTagOutput := prepareGitColorOutput("branchOrTag="+string(branchOrTag), BRANCH_COLOR)
+	CheckError(err, "Error while trying to checkout "+commitOutput+branchOrTagOutput)
 
-	log.Debug("Successful git checkout to", "commitHash", commitHash, "branchOrTag", branchOrTag)
+	log.Debug("Successful git checkout to " + commitHash + branchOrTagOutput)
 }
 
 func IsGitUrl(url string) bool {
@@ -133,7 +151,7 @@ func prepareGitReference(baseReference string) (
 	var branch plumbing.ReferenceName
 	var tag plumbing.ReferenceName
 
-	tagRegexp, _ := regexp.Compile(`\d(\..*)+`)
+	tagRegexp, _ := regexp.Compile(TAG_REGEXP)
 
 	if tagRegexp.MatchString(baseReference) {
 		tag = plumbing.NewTagReferenceName(baseReference)
@@ -145,7 +163,10 @@ func prepareGitReference(baseReference string) (
 		reference = branch
 	}
 
-	log.Debug("Preparing reference", "tag", tag, "commitHash", commitHash, "branch", branch)
+	tagOutput := prepareGitColorOutput("tag="+string(tag), TAG_COLOR) + " "
+	commitOutput := prepareGitColorOutput("commitHash="+commitHash, HASH_COLOR) + " "
+	branchOutput := prepareGitColorOutput("branch="+string(branch), BRANCH_COLOR) + " "
+	log.Debug("Parsed from git url " + tagOutput + commitOutput + branchOutput)
 
 	return reference, commitHash, branch, tag
 }
@@ -164,7 +185,7 @@ func getDefaultBranch(repo *git.Repository) plumbing.ReferenceName {
 	})
 	CheckError(err, "Error while iterating remotes when getting default branch")
 
-	log.Debug("Got default branch", "branch", defaultBranch)
+	log.Debug("Got default " + prepareGitColorOutput("branch "+string(defaultBranch), BRANCH_COLOR))
 
 	return defaultBranch
 }
@@ -178,4 +199,8 @@ func getGitAuth(repoUrl string, sshKeyPath string, sshKeyPassword string) *ssh.P
 	CheckError(err, "Error while creating git clone auth")
 
 	return auth
+}
+
+func prepareGitColorOutput(output string, color lipgloss.Color) string {
+	return PrepareColorOutput(output, color)
 }

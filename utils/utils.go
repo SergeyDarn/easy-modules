@@ -3,17 +3,23 @@ package utils
 import (
 	"os"
 
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
 
-func CheckError(err error, additionalMessage string) {
+const (
+	SUCCESS_COLOR = lipgloss.Color("#09af00")
+	WARNING_COLOR = lipgloss.Color("192")
+	DANGER_COLOR  = lipgloss.Color("204")
+)
+
+func CheckError(err error, readableErrMessage string) {
 	if err == nil {
 		return
 	}
 
-	if additionalMessage != "" {
-		log.Error(additionalMessage + ": " + err.Error())
-	}
+	coloredErr := PrepareColorOutput(readableErrMessage+": "+err.Error(), DANGER_COLOR)
+	log.Error(coloredErr)
 
 	os.Exit(1)
 }
@@ -24,4 +30,8 @@ func MergeMaps(map1 map[string]string, map2 map[string]string) map[string]string
 	}
 
 	return map1
+}
+
+func PrepareColorOutput(output string, color lipgloss.Color) string {
+	return lipgloss.NewStyle().Foreground(lipgloss.TerminalColor(color)).Render(output)
 }

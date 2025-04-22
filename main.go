@@ -1,15 +1,17 @@
 package main
 
 import (
+	"flag"
+
 	"easymodules/modules"
 	"easymodules/utils"
-	"flag"
 
 	"github.com/charmbracelet/log"
 )
 
 func main() {
 	log.SetLevel(log.DebugLevel)
+
 	utils.InitEnv()
 
 	showChangedModulesPtr := flag.Bool("show-changed-modules", false, "run command to show modules with unsaved git changes")

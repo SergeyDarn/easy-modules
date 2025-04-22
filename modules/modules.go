@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,7 +20,7 @@ type JsonConfig struct {
 	DevDependencies map[string]string
 }
 
-var MODULES_DIR_PERMISSIONS os.FileMode = 0777
+var MODULES_DIR_PERMISSIONS os.FileMode = 0o777
 
 func getModulesDir() string {
 	return utils.GetEnv(utils.ENV_MODULES_DIR)
@@ -44,7 +45,7 @@ func CreateModulesDir() {
 func RemoveModulesDir() {
 	err := os.RemoveAll(getModulesDir())
 	utils.CheckError(err, "Error while trying to delete modules folder")
-	log.Debug("Modules folder deleted before installation")
+	log.Debug(utils.PrepareColorOutput("Modules folder deleted before installation", utils.DANGER_COLOR))
 }
 
 func InstallModules(dependencies map[string]string, parallelInstall bool) {
@@ -72,15 +73,18 @@ func InstallModules(dependencies map[string]string, parallelInstall bool) {
 		waitGroup.Wait()
 	}
 
-	log.Debug("Installing modules took " + time.Since(start).String())
+	log.Debug(
+		utils.PrepareColorOutput(
+			"Installing modules took "+time.Since(start).String(),
+			utils.SUCCESS_COLOR,
+		),
+	)
 }
 
 func installModule(moduleName string, moduleUrl string) {
 	if !utils.IsGitUrl(moduleUrl) {
 		return
 	}
-
-	fmt.Println()
 
 	sshKeyPath := utils.GetEnv(utils.ENV_SSH_KEY_PATH)
 	sshKeyPasword := utils.GetEnv(utils.ENV_SSH_KEY_PASSWORD)
@@ -98,9 +102,11 @@ func installModule(moduleName string, moduleUrl string) {
 	gitStatus := utils.GitDirStatus(moduleDir)
 	if gitStatus.String() != "" {
 		log.Info(
-			"There are unsaved changes for this module. Aborting.",
-			"module", moduleName,
-			"unsavedChanges", gitStatus,
+			utils.PrepareColorOutput(
+				"There are unsaved changes for module \""+moduleName+"\" - skipping it. "+
+					"UnsavedChanges ="+gitStatus.String(),
+				utils.WARNING_COLOR,
+			),
 		)
 		return
 	}
@@ -127,9 +133,11 @@ func ShowChangedModules() {
 	}
 
 	log.Info(
-		"Unsaved Modules", "qty",
-		len(changedModules), "modules",
-		strings.Join(changedModules, " "),
+		utils.PrepareColorOutput(
+			"Unsaved Modules qty="+strconv.Itoa(len(changedModules))+
+				"modules "+strings.Join(changedModules, " "),
+			utils.DANGER_COLOR,
+		),
 	)
 }
 
