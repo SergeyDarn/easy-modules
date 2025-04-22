@@ -102,11 +102,13 @@ func GitCheckout(
 		Hash:   hashObject,
 		Branch: processedReference,
 	})
-	commitOutput := prepareGitColorOutput("commitHash="+commitHash, HASH_COLOR) + " "
-	branchOrTagOutput := prepareGitColorOutput("branchOrTag="+string(branchOrTag), BRANCH_COLOR)
-	CheckError(err, "Error while trying to checkout "+commitOutput+branchOrTagOutput)
+	commitOutput := "commitHash=" + commitHash
+	branchOrTagOutput := "branchOrTag=" + string(branchOrTag)
+	CheckError(err, "Error while trying to checkout "+commitOutput+" "+branchOrTagOutput)
 
-	log.Debug("Successful git checkout to " + commitHash + branchOrTagOutput)
+	commitColorOutput := prepareGitColorOutput(commitOutput, HASH_COLOR)
+	branchOrTagColorOutput := prepareGitColorOutput(branchOrTagOutput, BRANCH_COLOR)
+	log.Debug("Successful git checkout to " + commitColorOutput + " " + branchOrTagColorOutput)
 }
 
 func IsGitUrl(url string) bool {
