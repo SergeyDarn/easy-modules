@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	SUCCESS_COLOR = lipgloss.Color("#09af00")
+	SUCCESS_COLOR = lipgloss.Color("#75d57f")
 	WARNING_COLOR = lipgloss.Color("192")
 	DANGER_COLOR  = lipgloss.Color("204")
 )
