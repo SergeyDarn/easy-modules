@@ -14,12 +14,12 @@ func main() {
 
 	utils.InitEnv()
 
-	showChangedModulesPtr := flag.Bool("show-changed-modules", false, "run command to show modules with unsaved git changes")
-	parallelInstallPtr := flag.Bool("parallel-install", true, "install modules in parallel (true/false)")
-	safeInstallPtr := flag.Bool("safe-install", true, "if this is set to false, modules folder will be deleted on start. Default version - each module is checked separately, and only if module has no unsaved changes, it's deleted and then reinstalled")
+	showChangedModules := *flag.Bool("show-changed-modules", false, "run command to show modules with unsaved git changes")
+	parallelInstall := *flag.Bool("parallel-install", true, "install modules in parallel (true/false)")
+	safeInstall := *flag.Bool("safe-install", true, "if this is set to false, modules folder will be deleted on start. Default version - each module is checked separately, and only if module has no unsaved changes, it's deleted and then reinstalled")
 	flag.Parse()
 
-	if *showChangedModulesPtr {
+	if showChangedModules {
 		modules.ShowChangedModules()
 		return
 	}
@@ -30,10 +30,10 @@ func main() {
 		configJson.DevDependencies,
 	)
 
-	if !*safeInstallPtr {
+	if !safeInstall {
 		modules.RemoveModulesDir()
 	}
 
 	modules.CreateModulesDir()
-	modules.InstallModules(dependencies, *parallelInstallPtr)
+	modules.InstallModules(dependencies, parallelInstall)
 }
