@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"maps"
 
 	"easymodules/modules"
 	"easymodules/utils"
@@ -25,15 +26,25 @@ func main() {
 	}
 
 	configJson := modules.ReadConfigJson()
-	var dependencies map[string]string = utils.MergeMaps(
-		configJson.Dependencies,
-		configJson.DevDependencies,
-	)
+	dependencies := configJson.Dependencies
+	maps.Copy(dependencies, configJson.DevDependencies)
+
+	gitDependencies := map[string]string{}
+	for key, value := range dependencies {
+		if utils.IsGitUrl(value) {
+			gitDependencies[key] = value
+		}
+	}
 
 	if !safeInstall {
 		modules.RemoveModulesDir()
 	}
 
+	if len(gitDependencies) == 0 {
+		log.Info(utils.PrepareWarningOutput("No git modules to install."))
+		return
+	}
+
 	modules.CreateModulesDir()
-	modules.InstallModules(dependencies, parallelInstall)
+	modules.InstallModules(gitDependencies, parallelInstall)
 }

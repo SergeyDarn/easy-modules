@@ -45,27 +45,27 @@ func CreateModulesDir() {
 func RemoveModulesDir() {
 	err := os.RemoveAll(getModulesDir())
 	utils.CheckError(err, "Error while trying to delete modules folder")
-	log.Debug(utils.PrepareColorOutput("Modules folder deleted before installation", utils.DANGER_COLOR))
+	log.Debug(utils.PrepareDangerOutput("Modules folder deleted before installation"))
 }
 
-func InstallModules(dependencies map[string]string, parallelInstall bool) {
+func InstallModules(modules map[string]string, parallelInstall bool) {
 	log.Debug("Installing modules into " + getModulesDir())
 	fmt.Println()
 
 	start := time.Now()
 
 	if !parallelInstall {
-		for name, value := range dependencies {
-			installModule(name, value)
+		for name, url := range modules {
+			installModule(name, url)
 		}
 	} else {
 		var waitGroup sync.WaitGroup
 
-		for name, value := range dependencies {
+		for name, url := range modules {
 			waitGroup.Add(1)
 
 			go func() {
-				installModule(name, value)
+				installModule(name, url)
 				defer waitGroup.Done()
 			}()
 		}
@@ -73,12 +73,8 @@ func InstallModules(dependencies map[string]string, parallelInstall bool) {
 		waitGroup.Wait()
 	}
 
-	log.Debug(
-		utils.PrepareColorOutput(
-			"Installing modules took "+time.Since(start).String(),
-			utils.SUCCESS_COLOR,
-		),
-	)
+	successMsg := "Installion of " + strconv.Itoa(len(modules)) + " modules took " + time.Since(start).String()
+	log.Debug(utils.PrepareSuccessOutput(successMsg))
 }
 
 func installModule(moduleName string, moduleUrl string) {
@@ -102,10 +98,9 @@ func installModule(moduleName string, moduleUrl string) {
 	gitStatus := utils.GitDirStatus(moduleDir)
 	if gitStatus.String() != "" {
 		log.Info(
-			utils.PrepareColorOutput(
-				"There are unsaved changes for module \""+moduleName+"\" - skipping it. "+
-					"UnsavedChanges ="+gitStatus.String(),
-				utils.WARNING_COLOR,
+			utils.PrepareWarningOutput(
+				"There are unsaved changes for module \"" + moduleName + "\" - skipping it. " +
+					"UnsavedChanges =" + gitStatus.String(),
 			),
 		)
 		return
@@ -133,10 +128,9 @@ func ShowChangedModules() {
 	}
 
 	log.Info(
-		utils.PrepareColorOutput(
-			"Unsaved Modules qty="+strconv.Itoa(len(changedModules))+
-				"modules "+strings.Join(changedModules, " "),
-			utils.DANGER_COLOR,
+		utils.PrepareDangerOutput(
+			"Unsaved Modules qty=" + strconv.Itoa(len(changedModules)) +
+				"modules " + strings.Join(changedModules, " "),
 		),
 	)
 }

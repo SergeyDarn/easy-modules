@@ -24,12 +24,16 @@ func CheckError(err error, readableErrMessage string) {
 	os.Exit(1)
 }
 
-func MergeMaps(map1 map[string]string, map2 map[string]string) map[string]string {
-	for name, value := range map2 {
-		map1[name] = value
-	}
+func PrepareSuccessOutput(output string) string {
+	return PrepareColorOutput(output, SUCCESS_COLOR)
+}
 
-	return map1
+func PrepareWarningOutput(output string) string {
+	return PrepareColorOutput(output, WARNING_COLOR)
+}
+
+func PrepareDangerOutput(output string) string {
+	return PrepareColorOutput(output, DANGER_COLOR)
 }
 
 func PrepareColorOutput(output string, color lipgloss.Color) string {

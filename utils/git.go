@@ -64,7 +64,7 @@ func GitClone(
 	CheckError(err, "Error while getting repo head")
 	headOutput := prepareGitColorOutput("head="+ref.String(), HASH_COLOR)
 
-	successOuput := PrepareColorOutput("Cloning successful ", SUCCESS_COLOR)
+	successOuput := PrepareSuccessOutput("Cloning successful") + " "
 	log.Debug(successOuput + repoOutput + headOutput)
 }
 
