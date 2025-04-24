@@ -36,13 +36,13 @@ func main() {
 		}
 	}
 
-	if !safeInstall {
-		modules.RemoveModulesDir()
-	}
-
 	if len(gitDependencies) == 0 {
 		log.Info(utils.PrepareWarningOutput("No git modules to install."))
 		return
+	}
+
+	if !safeInstall {
+		modules.RemoveModulesDir()
 	}
 
 	modules.CreateModulesDir()
