@@ -1,0 +1,121 @@
+package utils
+
+import (
+	"testing"
+
+	"github.com/go-git/go-git/v5/plumbing"
+)
+
+func TestIsGitUrl(t *testing.T) {
+	tests := []struct {
+		url  string
+		want bool
+	}{
+		{"git", true},
+		{"htts://google.com/", false},
+		{"randomString", false},
+		{"cool-js-module", false},
+		{"https://github.com/SergeyDarn/scrape-search-ai.git", true},
+		{"git@github.com:SergeyDarn/scrape-search-ai.git", true},
+	}
+
+	for _, test := range tests {
+		testname := test.url
+
+		t.Run(testname, func(t *testing.T) {
+			res := IsGitUrl(test.url)
+
+			if res != test.want {
+				t.Errorf("Expected %t, but got %t", test.want, res)
+			}
+		})
+
+		IsGitUrl(test.url)
+	}
+}
+
+func TestParseGitUrl(t *testing.T) {
+	type want struct {
+		cleanUrl   string
+		commitHash string
+		branch     plumbing.ReferenceName
+		tag        plumbing.ReferenceName
+	}
+
+	tests := []struct {
+		name   string
+		gitUrl string
+		want   want
+	}{
+		{"Invalid url", "htts://google.com/", want{"", "", "", ""}},
+		{"No reference http url", "https://github.com/SergeyDarn/scrape-search-ai.git", want{
+			"https://github.com/SergeyDarn/scrape-search-ai.git", "", "", "",
+		}},
+		{"No reference ssh url", "git@github.com:SergeyDarn/scrape-search-ai.git", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", "",
+		}},
+		{"Http url with invalid reference", "https://github.com/SergeyDarn/scrape-search-ai#", want{
+			"https://github.com/SergeyDarn/scrape-search-ai", "", "", "",
+		}},
+		{"Ssh url with invalid reference", "git@github.com:SergeyDarn/scrape-search-ai.git#", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", "",
+		}},
+
+		{"Branch 1", "git@github.com:SergeyDarn/scrape-search-ai.git#1", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("1"), "",
+		}},
+		{"Branch 123", "git@github.com:SergeyDarn/scrape-search-ai.git#123", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("123"), "",
+		}},
+		{"Branch dev", "git@github.com:SergeyDarn/scrape-search-ai.git#dev", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("dev"), "",
+		}},
+
+		{"Branch 1fh1hfgdjjsadfg2", "git@github.com:SergeyDarn/scrape-search-ai.git#1fh1hfgdjjsadfg2", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("1fh1hfgdjjsadfg2"), "",
+		}},
+		{"CommitHash b7620f64a115b85eca08504cb9b364e594c9f8df", "git@github.com:SergeyDarn/scrape-search-ai.git#b7620f64a115b85eca08504cb9b364e594c9f8df", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "b7620f64a115b85eca08504cb9b364e594c9f8df", "", "",
+		}},
+
+		{"Tag 1.4.0", "git@github.com:SergeyDarn/scrape-search-ai.git#1.4.0", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.4.0"),
+		}},
+		{"Tag 1.5", "git@github.com:SergeyDarn/scrape-search-ai.git#1.5", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.5"),
+		}},
+		{"Tag 1.10.0.1", "git@github.com:SergeyDarn/scrape-search-ai.git#1.10.0.1", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.10.0.1"),
+		}},
+		{"Tag 1.2.3_fix", "git@github.com:SergeyDarn/scrape-search-ai.git#1.2.3_fix", want{
+			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.2.3_fix"),
+		}},
+	}
+
+	for _, test := range tests {
+		testname := test.name
+		if test.name == "" {
+			testname = test.gitUrl
+		}
+
+		t.Run(testname, func(t *testing.T) {
+			cleanUrl, commitHash, branch, tag := parseGitUrl(test.gitUrl)
+
+			if cleanUrl != test.want.cleanUrl {
+				t.Errorf("Expected cleanUrl %x, but got %x", test.want.cleanUrl, cleanUrl)
+			}
+
+			if commitHash != test.want.commitHash {
+				t.Errorf("Expected commitHash %s, but got %s", test.want.commitHash, commitHash)
+			}
+
+			if branch != test.want.branch {
+				t.Errorf("Expected branch %s, but got %s", test.want.branch, branch)
+			}
+
+			if tag != test.want.tag {
+				t.Errorf("Expected tag %s, but got %s", test.want.tag, tag)
+			}
+		})
+	}
+}
