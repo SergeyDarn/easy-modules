@@ -42,7 +42,12 @@ func GitClone(
 	urlOutput := prepareGitColorOutput("url="+repoUrl, URL_COLOR)
 	log.Debug("Cloning " + repoOutput + urlOutput)
 
-	cleanModuleUrl, reference, commitHash, _, _ := parseGitUrl(repoUrl)
+	cleanModuleUrl, commitHash, branch, tag := parseGitUrl(repoUrl)
+	reference := branch
+	if tag != "" {
+		reference = tag
+	}
+
 	options := &git.CloneOptions{
 		URL:           cleanModuleUrl,
 		ReferenceName: reference,
@@ -115,40 +120,37 @@ func IsGitUrl(url string) bool {
 	return strings.Contains(url, "git")
 }
 
-// Returns cleanUrl, reference, commitHash, branch, tag
+// Returns cleanUrl, commitHash, branch, tag
 func parseGitUrl(gitUrl string) (
 	string,
-	plumbing.ReferenceName,
 	string,
 	plumbing.ReferenceName,
 	plumbing.ReferenceName,
 ) {
 	if !IsGitUrl(gitUrl) {
-		return "", "", "", "", ""
+		return "", "", "", ""
 	}
 
 	splitUrl := strings.Split(gitUrl, GIT_URL_SEPARATOR)
 	cleanUrl := splitUrl[0]
-	hasReference := len(splitUrl) > 1
+	hasReference := (len(splitUrl) > 1) && (splitUrl[1] != "")
 
 	if !hasReference {
-		return cleanUrl, "", "", "", ""
+		return cleanUrl, "", "", ""
 	}
 
 	baseReference := splitUrl[1]
-	reference, commitHash, branch, tag := prepareGitReference(baseReference)
+	commitHash, branch, tag := prepareGitReference(baseReference)
 
-	return cleanUrl, reference, commitHash, branch, tag
+	return cleanUrl, commitHash, branch, tag
 }
 
-// Returns reference, commitHash, branch, tag
+// Returns commitHash, branch, tag
 func prepareGitReference(baseReference string) (
-	plumbing.ReferenceName,
 	string,
 	plumbing.ReferenceName,
 	plumbing.ReferenceName,
 ) {
-	var reference plumbing.ReferenceName
 	var commitHash string
 	var branch plumbing.ReferenceName
 	var tag plumbing.ReferenceName
@@ -157,20 +159,30 @@ func prepareGitReference(baseReference string) (
 
 	if tagRegexp.MatchString(baseReference) {
 		tag = plumbing.NewTagReferenceName(baseReference)
-		reference = tag
 	} else if plumbing.IsHash(baseReference) {
 		commitHash = baseReference
 	} else {
 		branch = plumbing.NewBranchReferenceName(baseReference)
-		reference = branch
 	}
 
-	tagOutput := prepareGitColorOutput("tag="+string(tag), TAG_COLOR) + " "
-	commitOutput := prepareGitColorOutput("commitHash="+commitHash, HASH_COLOR) + " "
-	branchOutput := prepareGitColorOutput("branch="+string(branch), BRANCH_COLOR) + " "
-	log.Debug("Parsed from git url " + tagOutput + commitOutput + branchOutput)
+	baseLog := "Parsed from git url "
 
-	return reference, commitHash, branch, tag
+	if commitHash != "" {
+		commitLog := prepareGitColorOutput("commitHash="+commitHash, HASH_COLOR)
+		log.Debug(baseLog + commitLog)
+	}
+
+	if branch != "" {
+		branchLog := prepareGitColorOutput("branch="+string(branch), BRANCH_COLOR)
+		log.Debug(baseLog + branchLog)
+	}
+
+	if tag != "" {
+		tagLog := prepareGitColorOutput("tag="+string(tag), TAG_COLOR) + " "
+		log.Debug(baseLog + tagLog)
+	}
+
+	return commitHash, branch, tag
 }
 
 func getDefaultBranch(repo *git.Repository) plumbing.ReferenceName {
