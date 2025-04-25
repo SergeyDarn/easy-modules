@@ -47,48 +47,57 @@ func TestParseGitUrl(t *testing.T) {
 		gitUrl string
 		want   want
 	}{
-		{"Invalid url", "htts://google.com/", want{"", "", "", ""}},
+		{"Invalid url", "htts://google.com/", want{}},
 		{"No reference http url", "https://github.com/SergeyDarn/scrape-search-ai.git", want{
-			"https://github.com/SergeyDarn/scrape-search-ai.git", "", "", "",
+			cleanUrl: "https://github.com/SergeyDarn/scrape-search-ai.git",
 		}},
 		{"No reference ssh url", "git@github.com:SergeyDarn/scrape-search-ai.git", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
 		}},
 		{"Http url with invalid reference", "https://github.com/SergeyDarn/scrape-search-ai#", want{
-			"https://github.com/SergeyDarn/scrape-search-ai", "", "", "",
+			cleanUrl: "https://github.com/SergeyDarn/scrape-search-ai",
 		}},
 		{"Ssh url with invalid reference", "git@github.com:SergeyDarn/scrape-search-ai.git#", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
 		}},
 
 		{"Branch 1", "git@github.com:SergeyDarn/scrape-search-ai.git#1", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("1"), "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			branch:   plumbing.NewBranchReferenceName("1"),
 		}},
 		{"Branch 123", "git@github.com:SergeyDarn/scrape-search-ai.git#123", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("123"), "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			branch:   plumbing.NewBranchReferenceName("123"),
 		}},
 		{"Branch dev", "git@github.com:SergeyDarn/scrape-search-ai.git#dev", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("dev"), "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			branch:   plumbing.NewBranchReferenceName("dev"),
 		}},
 
 		{"Branch 1fh1hfgdjjsadfg2", "git@github.com:SergeyDarn/scrape-search-ai.git#1fh1hfgdjjsadfg2", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", plumbing.NewBranchReferenceName("1fh1hfgdjjsadfg2"), "",
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			branch:   plumbing.NewBranchReferenceName("1fh1hfgdjjsadfg2"),
 		}},
-		{"CommitHash b7620f64a115b85eca08504cb9b364e594c9f8df", "git@github.com:SergeyDarn/scrape-search-ai.git#b7620f64a115b85eca08504cb9b364e594c9f8df", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "b7620f64a115b85eca08504cb9b364e594c9f8df", "", "",
+		{"Commit Hash", "git@github.com:SergeyDarn/scrape-search-ai.git#b7620f64a115b85eca08504cb9b364e594c9f8df", want{
+			cleanUrl:   "git@github.com:SergeyDarn/scrape-search-ai.git",
+			commitHash: "b7620f64a115b85eca08504cb9b364e594c9f8df",
 		}},
 
 		{"Tag 1.4.0", "git@github.com:SergeyDarn/scrape-search-ai.git#1.4.0", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.4.0"),
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			tag:      plumbing.NewTagReferenceName("1.4.0"),
 		}},
 		{"Tag 1.5", "git@github.com:SergeyDarn/scrape-search-ai.git#1.5", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.5"),
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			tag:      plumbing.NewTagReferenceName("1.5"),
 		}},
 		{"Tag 1.10.0.1", "git@github.com:SergeyDarn/scrape-search-ai.git#1.10.0.1", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.10.0.1"),
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			tag:      plumbing.NewTagReferenceName("1.10.0.1"),
 		}},
 		{"Tag 1.2.3_fix", "git@github.com:SergeyDarn/scrape-search-ai.git#1.2.3_fix", want{
-			"git@github.com:SergeyDarn/scrape-search-ai.git", "", "", plumbing.NewTagReferenceName("1.2.3_fix"),
+			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
+			tag:      plumbing.NewTagReferenceName("1.2.3_fix"),
 		}},
 	}
 
