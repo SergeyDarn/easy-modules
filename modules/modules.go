@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -49,7 +48,7 @@ func RemoveModulesDir() {
 }
 
 func InstallModules(modules map[string]string, parallelInstall bool) {
-	log.Debug("Installing modules into " + getModulesDir())
+	log.Debugf("Installing modules into %s", getModulesDir())
 	fmt.Println()
 
 	start := time.Now()
@@ -73,8 +72,11 @@ func InstallModules(modules map[string]string, parallelInstall bool) {
 		waitGroup.Wait()
 	}
 
-	successMsg := "Installion of " + strconv.Itoa(len(modules)) + " modules took " + time.Since(start).String()
-	log.Debug(utils.PrepareSuccessOutput(successMsg))
+	log.Debugf(
+		utils.PrepareSuccessOutput("Installation of %d modules took %s"),
+		len(modules),
+		time.Since(start),
+	)
 }
 
 func installModule(moduleName string, moduleUrl string) {
@@ -97,11 +99,13 @@ func installModule(moduleName string, moduleUrl string) {
 
 	gitStatus := utils.GitDirStatus(moduleDir)
 	if gitStatus.String() != "" {
-		log.Info(
+		log.Infof(
 			utils.PrepareWarningOutput(
-				"There are unsaved changes for module \"" + moduleName + "\" - skipping it. " +
-					"UnsavedChanges =" + gitStatus.String(),
+				"\nThere are unsaved changes for module \"%s\" - skipping it\n"+
+					"\n%s",
 			),
+			moduleName,
+			gitStatus.String(),
 		)
 		return
 	}
@@ -127,11 +131,15 @@ func ShowChangedModules() {
 		}
 	}
 
-	log.Info(
-		utils.PrepareDangerOutput(
-			"Unsaved Modules qty=" + strconv.Itoa(len(changedModules)) +
-				"modules " + strings.Join(changedModules, " "),
-		),
+	if len(changedModules) == 0 {
+		log.Info(utils.PrepareSuccessOutput("You have no unsaved modules"))
+		return
+	}
+
+	log.Infof(
+		utils.PrepareWarningOutput("\nUnsaved Modules (%d):\n\n%s"),
+		len(changedModules),
+		strings.Join(changedModules, "\n"),
 	)
 }
 
