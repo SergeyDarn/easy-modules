@@ -111,7 +111,7 @@ func TestParseGitUrl(t *testing.T) {
 
 	for _, test := range tests {
 		testName := test.name
-		if test.name == "" {
+		if testName == "" {
 			testName = test.gitUrl
 		}
 
@@ -122,21 +122,30 @@ func TestParseGitUrl(t *testing.T) {
 			}
 
 			cleanUrl, commitHash, branch, tag := parseGitUrl(test.gitUrl)
+			fail := false
 
 			if cleanUrl != test.want.cleanUrl {
-				t.Errorf("Expected cleanUrl %x, but got %x", test.want.cleanUrl, cleanUrl)
+				t.Logf("Expected cleanUrl %s, but got %s", test.want.cleanUrl, cleanUrl)
+				fail = true
 			}
 
 			if commitHash != test.want.commitHash {
-				t.Errorf("Expected commitHash %s, but got %s", test.want.commitHash, commitHash)
+				t.Logf("Expected commitHash %s, but got %s", test.want.commitHash, commitHash)
+				fail = true
 			}
 
 			if branch != test.want.branch {
-				t.Errorf("Expected branch %s, but got %s", test.want.branch, branch)
+				t.Logf("Expected branch %s, but got %s", test.want.branch, branch)
+				fail = true
 			}
 
 			if tag != test.want.tag {
-				t.Errorf("Expected tag %s, but got %s", test.want.tag, tag)
+				t.Logf("Expected tag %s, but got %s", test.want.tag, tag)
+				fail = true
+			}
+
+			if fail {
+				t.Fail()
 			}
 		})
 	}
