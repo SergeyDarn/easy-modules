@@ -26,7 +26,7 @@ var envMap = map[EnvVariable]string{
 func InitEnv() {
 	err := godotenv.Load("go.env.local")
 	if err != nil {
-		log.Info("FYI: couldn't open go.env.local")
+		log.Info(PrepareWarningOutput("FYI: couldn't open go.env.local"))
 	}
 
 	err = godotenv.Load("go.env")
