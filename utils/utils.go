@@ -1,10 +1,7 @@
 package utils
 
 import (
-	"os"
-
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
 )
 
 const (
@@ -18,10 +15,11 @@ func CheckError(err error, readableErrMessage string) {
 		return
 	}
 
-	coloredErr := PrepareColorOutput(readableErrMessage+": "+err.Error(), DANGER_COLOR)
-	log.Error(coloredErr)
+	ThrowError(readableErrMessage + ": " + err.Error())
+}
 
-	os.Exit(1)
+func ThrowError(err string) {
+	panic(PrepareDangerOutput(err))
 }
 
 func PrepareSuccessOutput(output string) string {
