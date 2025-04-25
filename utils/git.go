@@ -75,7 +75,7 @@ func GitClone(
 
 func GitDirStatus(dirPath string) git.Status {
 	repo, err := git.PlainOpen(dirPath)
-	CheckError(err, "Error while trying to open module directory in git for gitFolderStatus")
+	CheckError(err, "Error while trying to open module directory "+dirPath+" in git for gitFolderStatus")
 
 	workTree, err := repo.Worktree()
 	CheckError(err, "Error while getting workTree for gitFolderStatus")
@@ -137,6 +137,10 @@ func parseGitUrl(gitUrl string) (
 
 	if !hasReference {
 		return cleanUrl, "", "", ""
+	}
+
+	if len(splitUrl) > 2 {
+		ThrowError("Cannot properly parse url " + gitUrl + " Aborting.")
 	}
 
 	baseReference := splitUrl[1]
