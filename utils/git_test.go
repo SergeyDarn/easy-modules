@@ -48,17 +48,11 @@ func TestParseGitUrl(t *testing.T) {
 		gitUrl string
 		want   want
 	}{
-		{"Invalid url", "htts://google.com/", want{}},
+		{"Not a git url", "htts://google.com/", want{}},
 		{"No reference http url", "https://github.com/SergeyDarn/scrape-search-ai.git", want{
 			cleanUrl: "https://github.com/SergeyDarn/scrape-search-ai.git",
 		}},
 		{"No reference ssh url", "git@github.com:SergeyDarn/scrape-search-ai.git", want{
-			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
-		}},
-		{"Http url with invalid reference", "https://github.com/SergeyDarn/scrape-search-ai#", want{
-			cleanUrl: "https://github.com/SergeyDarn/scrape-search-ai",
-		}},
-		{"Ssh url with invalid reference", "git@github.com:SergeyDarn/scrape-search-ai.git#", want{
 			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
 		}},
 
@@ -75,9 +69,9 @@ func TestParseGitUrl(t *testing.T) {
 			branch:   plumbing.NewBranchReferenceName("dev"),
 		}},
 
-		{"Branch 1fh1hfgdjjsadfg2", "git@github.com:SergeyDarn/scrape-search-ai.git#1fh1hfgdjjsadfg2", want{
+		{"Branch blablabla2", "git@github.com:SergeyDarn/scrape-search-ai.git#blablabla2", want{
 			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
-			branch:   plumbing.NewBranchReferenceName("1fh1hfgdjjsadfg2"),
+			branch:   plumbing.NewBranchReferenceName("blablabla2"),
 		}},
 		{"Commit Hash", "git@github.com:SergeyDarn/scrape-search-ai.git#b7620f64a115b85eca08504cb9b364e594c9f8df", want{
 			cleanUrl:   "git@github.com:SergeyDarn/scrape-search-ai.git",
@@ -101,10 +95,16 @@ func TestParseGitUrl(t *testing.T) {
 			tag:      plumbing.NewTagReferenceName("1.2.3_fix"),
 		}},
 
-		{"Icorrect tag 1.2.3#", "git@github.com:SergeyDarn/scrape-search-ai.git#1.2.3#", want{
+		{"Invalid Http url with # but no reference", "https://github.com/SergeyDarn/scrape-search-ai#", want{
 			error: true,
 		}},
-		{"Icorrect url with multiple #", "git@g#ithub.com:Serg#eyDarns#ear.git#11.3#", want{
+		{"Invalid Ssh url with # but no reference", "git@github.com:SergeyDarn/scrape-search-ai.git#", want{
+			error: true,
+		}},
+		{"Invalid tag 1.2.3#", "git@github.com:SergeyDarn/scrape-search-ai.git#1.2.3#", want{
+			error: true,
+		}},
+		{"Invalid url with multiple #", "git@g#ithub.com:Serg#eyDarns#ear.git#11.3#", want{
 			error: true,
 		}},
 	}
