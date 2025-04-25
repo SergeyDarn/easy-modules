@@ -20,9 +20,9 @@ func TestIsGitUrl(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		testname := test.url
+		testName := test.url
 
-		t.Run(testname, func(t *testing.T) {
+		t.Run(testName, func(t *testing.T) {
 			res := IsGitUrl(test.url)
 
 			if res != test.want {
@@ -40,6 +40,7 @@ func TestParseGitUrl(t *testing.T) {
 		commitHash string
 		branch     plumbing.ReferenceName
 		tag        plumbing.ReferenceName
+		error      bool
 	}
 
 	tests := []struct {
@@ -99,15 +100,27 @@ func TestParseGitUrl(t *testing.T) {
 			cleanUrl: "git@github.com:SergeyDarn/scrape-search-ai.git",
 			tag:      plumbing.NewTagReferenceName("1.2.3_fix"),
 		}},
+
+		{"Icorrect tag 1.2.3#", "git@github.com:SergeyDarn/scrape-search-ai.git#1.2.3#", want{
+			error: true,
+		}},
+		{"Icorrect url with multiple #", "git@g#ithub.com:Serg#eyDarns#ear.git#11.3#", want{
+			error: true,
+		}},
 	}
 
 	for _, test := range tests {
-		testname := test.name
+		testName := test.name
 		if test.name == "" {
-			testname = test.gitUrl
+			testName = test.gitUrl
 		}
 
-		t.Run(testname, func(t *testing.T) {
+		t.Run(testName, func(t *testing.T) {
+			if test.want.error {
+				TestPanic(t, testName, func() { parseGitUrl(test.gitUrl) })
+				return
+			}
+
 			cleanUrl, commitHash, branch, tag := parseGitUrl(test.gitUrl)
 
 			if cleanUrl != test.want.cleanUrl {
