@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
-	"slices"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -18,7 +18,7 @@ var GIT_DEFAULT_BRANCHES = []plumbing.ReferenceName{
 }
 
 const (
-	GIT_URL_SEPARATOR = string('#')
+	GIT_URL_SEPARATOR = "#"
 	GIT_NORMAL_URL    = "http"
 	TAG_REGEXP        = `\d(\..*)+`
 )
@@ -38,9 +38,9 @@ func GitClone(
 	sshKeyPath string,
 	sshKeyPassword string,
 ) {
-	repoOutput := prepareGitColorOutput("repo="+repoName, REPO_COLOR) + " "
-	urlOutput := prepareGitColorOutput("url="+repoUrl, URL_COLOR)
-	log.Debug("Cloning " + repoOutput + urlOutput)
+	repoLog := prepareGitColorOutput("repo="+repoName, REPO_COLOR)
+	urlLog := prepareGitColorOutput("url="+repoUrl, URL_COLOR)
+	log.Debugf("Cloning %s %s", repoLog, urlLog)
 
 	cleanModuleUrl, commitHash, branch, tag := parseGitUrl(repoUrl)
 	reference := branch
@@ -59,18 +59,18 @@ func GitClone(
 	}
 
 	repo, err := git.PlainClone(repoDirPath, false, options)
-	CheckError(err, "Error while clonning "+repoOutput)
+	CheckError(err, "Error while clonning "+repoLog)
 
 	if commitHash != "" {
-		GitCheckout(repo, commitHash, "")
+		GitCheckoutToCommit(repo, repoName, commitHash)
 	}
 
 	ref, err := repo.Head()
-	CheckError(err, "Error while getting repo head")
-	headOutput := prepareGitColorOutput("head="+ref.String(), HASH_COLOR)
+	CheckError(err, "Error while getting repo head for "+repoName)
 
-	successOuput := PrepareSuccessOutput("Cloning successful") + " "
-	log.Debug(successOuput + repoOutput + headOutput)
+	headLog := prepareGitColorOutput("head="+ref.String(), HASH_COLOR)
+	successLog := PrepareSuccessOutput("Cloning successful")
+	log.Debugf("%s %s %s", successLog, repoLog, headLog)
 }
 
 func GitDirStatus(dirPath string) git.Status {
@@ -86,34 +86,30 @@ func GitDirStatus(dirPath string) git.Status {
 	return status
 }
 
-func GitCheckout(
+func GitCheckoutToCommit(
 	repo *git.Repository,
+	repoName string,
 	commitHash string,
-	branchOrTag plumbing.ReferenceName,
 ) {
-	workTree, err := repo.Worktree()
-	CheckError(err, "Error while getting repo head")
-
-	var hashObject plumbing.Hash
-	var processedReference plumbing.ReferenceName = branchOrTag
-
-	if commitHash != "" {
-		hashObject = plumbing.NewHash(commitHash)
-	} else if branchOrTag == "" {
-		processedReference = getDefaultBranch(repo)
+	if commitHash == "" {
+		return
 	}
 
-	err = workTree.Checkout(&git.CheckoutOptions{
-		Hash:   hashObject,
-		Branch: processedReference,
-	})
-	commitOutput := "commitHash=" + commitHash
-	branchOrTagOutput := "branchOrTag=" + string(branchOrTag)
-	CheckError(err, "Error while trying to checkout "+commitOutput+" "+branchOrTagOutput)
+	workTree, err := repo.Worktree()
+	CheckError(err, fmt.Sprintf("Error while getting repo %s worktree before checkout", repoName))
 
-	commitColorOutput := prepareGitColorOutput(commitOutput, HASH_COLOR)
-	branchOrTagColorOutput := prepareGitColorOutput(branchOrTagOutput, BRANCH_COLOR)
-	log.Debug("Successful git checkout to " + commitColorOutput + " " + branchOrTagColorOutput)
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Hash: plumbing.NewHash(commitHash),
+	})
+
+	repoLog := "repo=" + repoName
+	commitLog := "commitHash=" + commitHash
+	CheckError(err, fmt.Sprintf("Error while trying to checkout %s %s", repoLog, commitLog))
+
+	repoColorLog := prepareGitColorOutput(repoLog, REPO_COLOR)
+	commitColorLog := prepareGitColorOutput(commitLog, HASH_COLOR)
+
+	log.Debugf("Sucessful checkout for %s to %s", repoColorLog, commitColorLog)
 }
 
 func IsGitUrl(url string) bool {
@@ -133,13 +129,13 @@ func parseGitUrl(gitUrl string) (
 
 	splitUrl := strings.Split(gitUrl, GIT_URL_SEPARATOR)
 	cleanUrl := splitUrl[0]
-	hasReference := (len(splitUrl) > 1) && (splitUrl[1] != "")
+	hasReference := len(splitUrl) > 1
 
 	if !hasReference {
 		return cleanUrl, "", "", ""
 	}
 
-	if len(splitUrl) > 2 {
+	if (splitUrl[1] == "") || (len(splitUrl) > 2) {
 		ThrowError("Cannot properly parse url " + gitUrl + " Aborting.")
 	}
 
@@ -187,25 +183,6 @@ func prepareGitReference(baseReference string) (
 	}
 
 	return commitHash, branch, tag
-}
-
-func getDefaultBranch(repo *git.Repository) plumbing.ReferenceName {
-	references, err := repo.References()
-	CheckError(err, "Error while trying to get repo remotes when getting default branch")
-
-	var defaultBranch plumbing.ReferenceName
-	err = references.ForEach(func(reference *plumbing.Reference) error {
-		if slices.Contains(GIT_DEFAULT_BRANCHES, reference.Name()) {
-			defaultBranch = reference.Name()
-		}
-
-		return nil
-	})
-	CheckError(err, "Error while iterating remotes when getting default branch")
-
-	log.Debug("Got default " + prepareGitColorOutput("branch "+string(defaultBranch), BRANCH_COLOR))
-
-	return defaultBranch
 }
 
 func getGitAuth(repoUrl string, sshKeyPath string, sshKeyPassword string) *ssh.PublicKeys {
