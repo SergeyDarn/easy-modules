@@ -116,6 +116,29 @@ func IsGitUrl(url string) bool {
 	return strings.Contains(url, "git")
 }
 
+func GetHeadTag(repo *git.Repository) *plumbing.Reference {
+	head, err := repo.Head()
+	CheckError(err, "Error while getting repo head (GetHeadTag)")
+
+	tags, err := repo.Tags()
+	CheckError(err, "Error while getting repo tags (GetHeadTag)")
+
+	var headTag *plumbing.Reference
+
+	tags.ForEach(func(tag *plumbing.Reference) error {
+		tagHash, err := repo.ResolveRevision(plumbing.Revision(tag.Name()))
+		CheckError(err, "Error while resolving revision (GetHeadTag)")
+
+		if *tagHash == head.Hash() {
+			headTag = tag
+		}
+
+		return nil
+	})
+
+	return headTag
+}
+
 // Returns cleanUrl, commitHash, branch, tag
 func parseGitUrl(gitUrl string) (
 	string,
