@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
@@ -29,8 +32,6 @@ func TestIsGitUrl(t *testing.T) {
 				t.Errorf("Expected %t, but got %t", test.want, res)
 			}
 		})
-
-		IsGitUrl(test.url)
 	}
 }
 
@@ -110,14 +111,9 @@ func TestParseGitUrl(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		testName := test.name
-		if testName == "" {
-			testName = test.gitUrl
-		}
-
-		t.Run(testName, func(t *testing.T) {
+		t.Run(test.name, func(t *testing.T) {
 			if test.want.error {
-				TestPanic(t, testName, func() { parseGitUrl(test.gitUrl) })
+				TestPanic(t, test.name, func() { parseGitUrl(test.gitUrl) })
 				return
 			}
 
@@ -148,5 +144,112 @@ func TestParseGitUrl(t *testing.T) {
 				t.Fail()
 			}
 		})
+	}
+}
+
+type gitCloneTest struct {
+	name     string
+	repoName string
+	gitUrl   string
+	want     gitCloneWant
+}
+
+type gitCloneWant struct {
+	head   string
+	tag    bool
+	commit bool
+	error  bool
+}
+
+func TestGitClone(t *testing.T) {
+	testDir := "TEST_GIT_CLONE_DIR"
+	tests := []gitCloneTest{
+		{"Master/Main", "main", "https://github.com/SergeyDarn/test-module-js.git", gitCloneWant{
+			head: plumbing.Main.Short(),
+		}},
+		{"Branch", "branch", "https://github.com/SergeyDarn/test-module-js.git#dev", gitCloneWant{
+			head: "dev",
+		}},
+		{"Commit Hash", "commit", "https://github.com/SergeyDarn/test-module-js.git#5d62004178df760fd8978ef166e9ab14d23b06d1", gitCloneWant{
+			head:   "5d62004178df760fd8978ef166e9ab14d23b06d1",
+			commit: true,
+		}},
+		{"Tag", "tag", "https://github.com/SergeyDarn/test-module-js.git#1.0.0", gitCloneWant{
+			head: "1.0.0",
+			tag:  true,
+		}},
+
+		{"Not Git Url", "not_git", "^5.3.0", gitCloneWant{error: true}},
+		{"Invalid Reference", "invalid_reference", "git@#github.#com:S#ergeyD#arn/test-module-js.git#", gitCloneWant{
+			error: true,
+		}},
+		{"Not Existing Tag", "wrong_tag", "https://github.com/SergeyDarn/test-module-js.git#1.0.0_doesnt_exist", gitCloneWant{
+			tag:   true,
+			error: true,
+		}},
+		{"Not Existing Branch", "wrong_branch", "https://github.com/SergeyDarn/test-module-js.git#doesnt_exist", gitCloneWant{
+			error: true,
+		}},
+		{"Not Existing Commit", "wrong_commit", "https://github.com/SergeyDarn/test-module-js.git#06a3e504bee6033d42690d01100edede077c7fe5", gitCloneWant{
+			commit: true,
+			error:  true,
+		}},
+	}
+
+	t.Run("Git Clone Group", func(t *testing.T) {
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				t.Parallel()
+				testGitClone(t, test, testDir)
+			})
+		}
+	})
+
+	os.RemoveAll(testDir)
+}
+
+func testGitClone(t *testing.T, test gitCloneTest, testDir string) {
+	testSshKeyPath := ""
+	testSshKeyPassword := ""
+
+	repoDir := filepath.Join(testDir, test.repoName)
+	os.RemoveAll(repoDir)
+
+	if test.want.error {
+		TestPanic(t, test.name, func() {
+			GitClone(test.repoName, test.gitUrl, repoDir, testSshKeyPath, testSshKeyPassword)
+		})
+
+		return
+	}
+
+	GitClone(test.repoName, test.gitUrl, repoDir, testSshKeyPath, testSshKeyPassword)
+
+	_, err := os.Stat(repoDir)
+	CheckTestError(t, err)
+
+	repo, err := git.PlainOpen(repoDir)
+	CheckTestError(t, err)
+
+	head, err := repo.Head()
+	CheckTestError(t, err)
+
+	headName := head.Name().Short()
+	if test.want.commit {
+		headName = head.Hash().String()
+	}
+
+	if test.want.tag {
+		tag := GetHeadTag(repo)
+
+		if tag == nil {
+			t.Fatalf("Expected tag %s, but couldn't find tag related to HEAD %s", test.want.head, headName)
+		}
+
+		headName = tag.Name().Short()
+	}
+
+	if headName != test.want.head {
+		t.Errorf("Expected HEAD to be %s, but got %s", test.want.head, headName)
 	}
 }
