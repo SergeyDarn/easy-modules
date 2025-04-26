@@ -167,6 +167,9 @@ func TestGitClone(t *testing.T) {
 		{"Master/Main", "main", "https://github.com/SergeyDarn/test-module-js.git", gitCloneWant{
 			head: plumbing.Main.Short(),
 		}},
+		{"SSH", "ssh", "git@github.com:SergeyDarn/test-module-js.git", gitCloneWant{
+			head: plumbing.Main.Short(),
+		}},
 		{"Branch", "branch", "https://github.com/SergeyDarn/test-module-js.git#dev", gitCloneWant{
 			head: "dev",
 		}},
@@ -209,21 +212,20 @@ func TestGitClone(t *testing.T) {
 }
 
 func testGitClone(t *testing.T, test gitCloneTest, testDir string) {
-	testSshKeyPath := ""
-	testSshKeyPassword := ""
-
 	repoDir := filepath.Join(testDir, test.repoName)
+
+	InitEnv()
 	os.RemoveAll(repoDir)
 
 	if test.want.error {
 		TestPanic(t, test.name, func() {
-			GitClone(test.repoName, test.gitUrl, repoDir, testSshKeyPath, testSshKeyPassword)
+			GitClone(test.repoName, test.gitUrl, repoDir)
 		})
 
 		return
 	}
 
-	GitClone(test.repoName, test.gitUrl, repoDir, testSshKeyPath, testSshKeyPassword)
+	GitClone(test.repoName, test.gitUrl, repoDir)
 
 	_, err := os.Stat(repoDir)
 	CheckTestError(t, err)
