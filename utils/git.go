@@ -35,8 +35,6 @@ func GitClone(
 	repoName string,
 	repoUrl string,
 	repoDirPath string,
-	sshKeyPath string,
-	sshKeyPassword string,
 ) {
 	repoLog := prepareGitColorOutput("repo="+repoName, REPO_COLOR)
 	urlLog := prepareGitColorOutput("url="+repoUrl, URL_COLOR)
@@ -53,7 +51,7 @@ func GitClone(
 		ReferenceName: reference,
 	}
 
-	auth := getGitAuth(repoUrl, sshKeyPath, sshKeyPassword)
+	auth := getGitAuth(repoUrl)
 	if auth != nil {
 		options.Auth = auth
 	}
@@ -208,10 +206,13 @@ func prepareGitReference(baseReference string) (
 	return commitHash, branch, tag
 }
 
-func getGitAuth(repoUrl string, sshKeyPath string, sshKeyPassword string) *ssh.PublicKeys {
+func getGitAuth(repoUrl string) *ssh.PublicKeys {
 	if strings.Contains(repoUrl, GIT_NORMAL_URL) {
 		return nil
 	}
+
+	sshKeyPath := GetEnv(ENV_SSH_KEY_PATH)
+	sshKeyPassword := GetEnv(ENV_SSH_KEY_PASSWORD)
 
 	auth, err := ssh.NewPublicKeysFromFile("git", sshKeyPath, sshKeyPassword)
 	CheckError(err, "Error while creating git clone auth")

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/charmbracelet/log"
 	"github.com/joho/godotenv"
@@ -10,13 +11,15 @@ import (
 type EnvVariable int
 
 const (
-	ENV_CONFIG_FILE EnvVariable = iota
+	ENV_ROOT EnvVariable = iota
+	ENV_CONFIG_FILE
 	ENV_MODULES_DIR
 	ENV_SSH_KEY_PATH
 	ENV_SSH_KEY_PASSWORD
 )
 
 var envMap = map[EnvVariable]string{
+	ENV_ROOT:             "ENV_ROOT",
 	ENV_CONFIG_FILE:      "CONFIG_FILE",
 	ENV_MODULES_DIR:      "MODULES_DIR",
 	ENV_SSH_KEY_PATH:     "SSH_KEY_PATH",
@@ -24,12 +27,14 @@ var envMap = map[EnvVariable]string{
 }
 
 func InitEnv() {
-	err := godotenv.Load("go.env.local")
+	envRoot := GetEnv(ENV_ROOT)
+
+	err := godotenv.Load(filepath.Join(envRoot, "go.env.local"))
 	if err != nil {
 		log.Info(PrepareWarningOutput("FYI: couldn't open go.env.local"))
 	}
 
-	err = godotenv.Load("go.env")
+	err = godotenv.Load(filepath.Join(envRoot, "go.env"))
 	CheckError(err, "Error loading go.env file")
 }
 

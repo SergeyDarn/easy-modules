@@ -1,6 +1,7 @@
 package modules
 
 import (
+	"easymodules/utils"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,8 +9,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"easymodules/utils"
 
 	"github.com/charmbracelet/log"
 )
@@ -84,14 +83,12 @@ func installModule(moduleName string, moduleUrl string) {
 		return
 	}
 
-	sshKeyPath := utils.GetEnv(utils.ENV_SSH_KEY_PATH)
-	sshKeyPasword := utils.GetEnv(utils.ENV_SSH_KEY_PASSWORD)
 	moduleDir := filepath.Join(getModulesDir(), moduleName)
 	_, err := os.Stat(moduleDir)
 	isModuleNotCloned := os.IsNotExist(err)
 
 	if isModuleNotCloned {
-		utils.GitClone(moduleName, moduleUrl, moduleDir, sshKeyPath, sshKeyPasword)
+		utils.GitClone(moduleName, moduleUrl, moduleDir)
 		return
 	}
 
@@ -113,7 +110,7 @@ func installModule(moduleName string, moduleUrl string) {
 	err = os.RemoveAll(moduleDir)
 	utils.CheckError(err, "Error while trying to delete module folder for "+moduleName)
 
-	utils.GitClone(moduleName, moduleUrl, moduleDir, sshKeyPath, sshKeyPath)
+	utils.GitClone(moduleName, moduleUrl, moduleDir)
 }
 
 func ShowChangedModules() {
