@@ -83,9 +83,8 @@ func installModule(moduleName string, moduleUrl string) {
 		return
 	}
 
-	moduleDir := filepath.Join(getModulesDir(), moduleName)
-	_, err := os.Stat(moduleDir)
-	isModuleNotCloned := os.IsNotExist(err)
+	moduleDir := getModuleDir(moduleName)
+	err, isModuleNotCloned := checkModuleDirStatus(moduleDir)
 
 	if isModuleNotCloned {
 		utils.GitClone(moduleName, moduleUrl, moduleDir)
@@ -138,6 +137,11 @@ func ShowChangedModules() {
 		len(changedModules),
 		strings.Join(changedModules, "\n"),
 	)
+}
+
+func checkModuleDirStatus(moduleDir string) (error, bool) {
+	_, err := os.Stat(moduleDir)
+	return err, os.IsNotExist(err)
 }
 
 func getModuleDir(moduleName string) string {

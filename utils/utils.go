@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"os"
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -20,6 +23,16 @@ func CheckError(err error, readableErrMessage string) {
 
 func ThrowError(err string) {
 	panic(PrepareDangerOutput(err))
+}
+
+func GetPathRootDir(path string) string {
+	splitPath := strings.Split(path, string(os.PathSeparator))
+
+	if len(splitPath) == 0 {
+		return ""
+	}
+
+	return splitPath[0]
 }
 
 func PrepareSuccessOutput(output string) string {
