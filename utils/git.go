@@ -12,11 +12,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
 )
 
-var GIT_DEFAULT_BRANCHES = []plumbing.ReferenceName{
-	plumbing.NewBranchReferenceName("main"),
-	plumbing.NewBranchReferenceName("master"),
-}
-
 const (
 	GIT_URL_SEPARATOR = "#"
 	GIT_NORMAL_URL    = "http"
@@ -27,8 +22,8 @@ const (
 	REPO_COLOR   = lipgloss.Color("#f98b6c")
 	URL_COLOR    = lipgloss.Color("#4a26fd")
 	TAG_COLOR    = lipgloss.Color("#ef4fa6")
-	HASH_COLOR   = lipgloss.Color("#1E88E5")
-	BRANCH_COLOR = lipgloss.Color("#ff9e22")
+	HASH_COLOR   = lipgloss.Color("#1e88e5")
+	BRANCH_COLOR = lipgloss.Color("#03dac6")
 )
 
 func GitClone(
@@ -63,10 +58,10 @@ func GitClone(
 		GitCheckoutToCommit(repo, repoName, commitHash)
 	}
 
-	ref, err := repo.Head()
-	CheckError(err, "Error while getting repo head for "+repoName)
+	headName := GetHeadShort(repo, commitHash != "", tag != "")
+	headColor := getGitColor(commitHash != "", tag != "")
 
-	headLog := prepareGitColorOutput("head="+ref.String(), HASH_COLOR)
+	headLog := prepareGitColorOutput("head="+headName, headColor)
 	successLog := PrepareSuccessOutput("Cloning successful")
 	log.Debugf("%s %s %s", successLog, repoLog, headLog)
 }
@@ -106,12 +101,31 @@ func GitCheckoutToCommit(
 
 	repoColorLog := prepareGitColorOutput(repoLog, REPO_COLOR)
 	commitColorLog := prepareGitColorOutput(commitLog, HASH_COLOR)
-
 	log.Debugf("Sucessful checkout for %s to %s", repoColorLog, commitColorLog)
 }
 
 func IsGitUrl(url string) bool {
 	return strings.Contains(url, "git")
+}
+
+func GetHeadShort(repo *git.Repository, isCommit bool, isTag bool) string {
+	head, err := repo.Head()
+	CheckError(err, "Error while getting repo head")
+
+	if isCommit {
+		return head.Hash().String()
+	}
+
+	if isTag {
+		headTag := GetHeadTag(repo)
+		if headTag == nil {
+			ThrowError("Couldn't find tag for head " + head.String())
+		}
+
+		return headTag.Name().Short()
+	}
+
+	return head.Name().Short()
 }
 
 func GetHeadTag(repo *git.Repository) *plumbing.Reference {
@@ -194,12 +208,12 @@ func prepareGitReference(baseReference string) (
 	}
 
 	if branch != "" {
-		branchLog := prepareGitColorOutput("branch="+string(branch), BRANCH_COLOR)
+		branchLog := prepareGitColorOutput("branch="+branch.Short(), BRANCH_COLOR)
 		log.Debug(baseLog + branchLog)
 	}
 
 	if tag != "" {
-		tagLog := prepareGitColorOutput("tag="+string(tag), TAG_COLOR) + " "
+		tagLog := prepareGitColorOutput("tag="+tag.Short(), TAG_COLOR) + " "
 		log.Debug(baseLog + tagLog)
 	}
 
@@ -222,4 +236,16 @@ func getGitAuth(repoUrl string) *ssh.PublicKeys {
 
 func prepareGitColorOutput(output string, color lipgloss.Color) string {
 	return PrepareColorOutput(output, color)
+}
+
+func getGitColor(isHash bool, isTag bool) lipgloss.Color {
+	if isHash {
+		return HASH_COLOR
+	}
+
+	if isTag {
+		return TAG_COLOR
+	}
+
+	return BRANCH_COLOR
 }

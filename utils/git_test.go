@@ -233,23 +233,7 @@ func testGitClone(t *testing.T, test gitCloneTest, testDir string) {
 	repo, err := git.PlainOpen(repoDir)
 	CheckTestError(t, err)
 
-	head, err := repo.Head()
-	CheckTestError(t, err)
-
-	headName := head.Name().Short()
-	if test.want.commit {
-		headName = head.Hash().String()
-	}
-
-	if test.want.tag {
-		tag := GetHeadTag(repo)
-
-		if tag == nil {
-			t.Fatalf("Expected tag %s, but couldn't find tag related to HEAD %s", test.want.head, headName)
-		}
-
-		headName = tag.Name().Short()
-	}
+	headName := GetHeadShort(repo, test.want.commit, test.want.tag)
 
 	if headName != test.want.head {
 		t.Errorf("Expected HEAD to be %s, but got %s", test.want.head, headName)
