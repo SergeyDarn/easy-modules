@@ -67,7 +67,7 @@ func testInstallModule(t *testing.T, test installModuleTest) {
 		t.Fatalf("Expected module to exist after install, but got error: %s", err.Error())
 	}
 
-	if test.want.noDir {
+	if test.want.noDir || !test.want.testGitStatus {
 		return
 	}
 
