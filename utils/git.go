@@ -110,7 +110,7 @@ func IsGitUrl(url string) bool {
 
 func GetHeadShortName(repo *git.Repository, isCommit bool, isTag bool) string {
 	head, err := repo.Head()
-	CheckError(err, "Error while getting repo head")
+	CheckError(err, "Error while getting repo head (GetHeadShortName)")
 
 	if isCommit {
 		return head.Hash().String()
@@ -119,7 +119,9 @@ func GetHeadShortName(repo *git.Repository, isCommit bool, isTag bool) string {
 	if isTag {
 		headTag := GetHeadTag(repo)
 		if headTag == nil {
-			ThrowError("Couldn't find tag for head " + head.String())
+			ThrowError(
+				fmt.Sprintf("Couldn't find tag for head %s (GetHeadShortName)", head.String()),
+			)
 		}
 
 		return headTag.Name().Short()
