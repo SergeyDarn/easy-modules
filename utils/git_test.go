@@ -199,7 +199,10 @@ func TestGitClone(t *testing.T) {
 		}},
 	}
 
-	t.Run("Git Clone Group", func(t *testing.T) {
+	InitEnv()
+	os.RemoveAll(testDir)
+
+	t.Run("GitClone Group", func(t *testing.T) {
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
 				t.Parallel()
@@ -213,9 +216,6 @@ func TestGitClone(t *testing.T) {
 
 func testGitClone(t *testing.T, test gitCloneTest, testDir string) {
 	repoDir := filepath.Join(testDir, test.repoName)
-
-	InitEnv()
-	os.RemoveAll(repoDir)
 
 	if test.want.error {
 		TestPanic(t, test.name, func() {
