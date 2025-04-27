@@ -233,7 +233,7 @@ func testGitClone(t *testing.T, test gitCloneTest, testDir string) {
 	repo, err := git.PlainOpen(repoDir)
 	CheckTestError(t, err)
 
-	headName := GetHeadShort(repo, test.want.commit, test.want.tag)
+	headName := GetHeadShortName(repo, test.want.commit, test.want.tag)
 
 	if headName != test.want.head {
 		t.Errorf("Expected HEAD to be %s, but got %s", test.want.head, headName)

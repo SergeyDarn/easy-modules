@@ -58,7 +58,7 @@ func GitClone(
 		GitCheckoutToCommit(repo, repoName, commitHash)
 	}
 
-	headName := GetHeadShort(repo, commitHash != "", tag != "")
+	headName := GetHeadShortName(repo, commitHash != "", tag != "")
 	headColor := getGitColor(commitHash != "", tag != "")
 
 	headLog := prepareGitColorOutput("head="+headName, headColor)
@@ -108,7 +108,7 @@ func IsGitUrl(url string) bool {
 	return strings.Contains(url, "git")
 }
 
-func GetHeadShort(repo *git.Repository, isCommit bool, isTag bool) string {
+func GetHeadShortName(repo *git.Repository, isCommit bool, isTag bool) string {
 	head, err := repo.Head()
 	CheckError(err, "Error while getting repo head")
 
